@@ -18,7 +18,7 @@ export default function Login() {
       : await supabase.auth.signInWithPassword({ email, password })
 
     if (error) setError(error.message)
-    else navigate('/app/survey')
+    else navigate('/app')
   }
 
   return (

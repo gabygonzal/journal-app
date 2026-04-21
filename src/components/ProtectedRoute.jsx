@@ -35,7 +35,7 @@ export default function ProtectedRoute() {
   }, [])
 
   if (session === undefined || checking) return null
-  if (!session) return <Navigate to="/" />
+  if (!session) return <Navigate to="/login" />
 
   return (
     <div className="min-h-screen bg-stone-950 flex flex-col">
