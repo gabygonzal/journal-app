@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, Outlet, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import Navbar from './Navbar'
 
 export default function ProtectedRoute() {
   const [session, setSession] = useState(undefined)
@@ -18,7 +19,7 @@ export default function ProtectedRoute() {
           .limit(1)
 
         if (data && data.length > 0) {
-          navigate('/app/journals')
+          navigate('/app/dashboard')
         } else {
           navigate('/app/survey')
         }
@@ -35,5 +36,13 @@ export default function ProtectedRoute() {
 
   if (session === undefined || checking) return null
   if (!session) return <Navigate to="/" />
-  return <Outlet />
+
+  return (
+    <div className="min-h-screen bg-stone-950 flex flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+    </div>
+  )
 }

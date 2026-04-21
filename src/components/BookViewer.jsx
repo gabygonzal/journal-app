@@ -7,6 +7,7 @@ import {
 } from "react";
 import HTMLFlipBook from "react-pageflip";
 import { supabase } from "../supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 const prompts = {
   today_tomorrow: [
@@ -33,7 +34,6 @@ const prompts = {
   stream: [],
 };
 
-/** Single page width; book shows two pages = 2 × this. */
 const PAGE_WIDTH = 420;
 const PAGE_HEIGHT = 600;
 const FLIP_MS = 1000;
@@ -50,18 +50,15 @@ function entrySpreadStartIndex(entryIndex) {
 
 export default function BookViewer({ journal, onClose }) {
   const [entries, setEntries] = useState([]);
-  const [currentEntry, setCurrentEntry] = useState({});
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const bookRef = useRef();
   const [disableFlipByClick, setDisableFlipByClick] = useState(true);
   const pendingPrevFlipRef = useRef(false);
+  const bookRef = useRef();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadEntries();
   }, []);
 
-  /** After `disableFlipByClick` drops false, run animated flipPrev (works with Strict Mode). */
   useLayoutEffect(() => {
     if (!disableFlipByClick && pendingPrevFlipRef.current) {
       pendingPrevFlipRef.current = false;
@@ -79,9 +76,7 @@ export default function BookViewer({ journal, onClose }) {
   }, [disableFlipByClick]);
 
   async function loadEntries() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     const { data } = await supabase
       .from("entries")
       .select("*")
@@ -89,25 +84,6 @@ export default function BookViewer({ journal, onClose }) {
       .eq("journal_type", journal.type)
       .order("created_at", { ascending: false });
     if (data) setEntries(data);
-  }
-
-  async function handleSave() {
-    setSaving(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const { error } = await supabase.from("entries").insert({
-      user_id: user.id,
-      journal_type: journal.type,
-      content: currentEntry,
-    });
-    if (!error) {
-      setSaved(true);
-      setCurrentEntry({});
-      loadEntries();
-      setTimeout(() => setSaved(false), 2000);
-    }
-    setSaving(false);
   }
 
   function flipToEntry(entryIndex) {
@@ -142,11 +118,10 @@ export default function BookViewer({ journal, onClose }) {
         </button>
         <h2 className="text-stone-200 font-medium">{journal.name}</h2>
         <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-sm transition-colors disabled:opacity-50"
+          onClick={() => navigate('/app/writing')}
+          className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-sm transition-colors"
         >
-          {saving ? "Saving..." : saved ? "Saved!" : "Save entry"}
+          Write new entry →
         </button>
       </div>
 
@@ -155,31 +130,23 @@ export default function BookViewer({ journal, onClose }) {
         className="relative flex w-full max-w-full items-center justify-center gap-2 overflow-x-auto sm:gap-4"
         style={{ maxWidth: bookOuterMax }}
       >
-        <button
-          type="button"
-          onClick={handleAnimatedPrev}
-          className="text-stone-500 hover:text-stone-200 transition-colors text-2xl px-1 sm:px-2 shrink-0"
-          aria-label="Previous spread"
-        >
-          ‹
-        </button>
 
         <HTMLFlipBook
-          ref={bookRef}
-          width={PAGE_WIDTH}
-          height={PAGE_HEIGHT}
-          size="fixed"
-          drawShadow={true}
-          maxShadowOpacity={0.62}
-          flippingTime={FLIP_MS}
-          className="shadow-2xl rounded-sm"
-          showCover={false}
-          mobileScrollSupport={true}
-          disableFlipByClick={disableFlipByClick}
-          useMouseEvents={false}
-          usePortrait={false}
-          clickEventForward={true}
-          renderOnlyPageLengthChange={true}
+           ref={bookRef}
+           width={PAGE_WIDTH}
+           height={PAGE_HEIGHT}
+           size="fixed"
+           drawShadow={true}
+           maxShadowOpacity={0.62}
+           flippingTime={FLIP_MS}
+           className="shadow-2xl rounded-sm"
+           showCover={false}
+           mobileScrollSupport={true}
+           disableFlipByClick={false}
+           useMouseEvents={true}
+           usePortrait={false}
+           clickEventForward={true}
+           renderOnlyPageLengthChange={true}
         >
           {/* Left — index of all past entries */}
           <Page>
@@ -204,15 +171,12 @@ export default function BookViewer({ journal, onClose }) {
                           className="w-full text-left rounded-lg border border-amber-300/50 bg-amber-100/40 hover:bg-amber-200/50 px-3 py-2.5 transition-colors"
                         >
                           <span className="text-amber-950 text-sm font-medium block">
-                            {new Date(entry.created_at).toLocaleDateString(
-                              "en-US",
-                              {
-                                weekday: "short",
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              }
-                            )}
+                            {new Date(entry.created_at).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
                           </span>
                           <span className="text-amber-800/80 text-xs">
                             Entry {entries.length - i} — read in book
@@ -223,7 +187,7 @@ export default function BookViewer({ journal, onClose }) {
                   </ul>
                 ) : (
                   <p className="text-stone-500 text-sm leading-relaxed">
-                    No saved entries yet. When you save, they will appear here.
+                    No saved entries yet. Write your first entry to see it here.
                   </p>
                 )}
 
@@ -235,15 +199,13 @@ export default function BookViewer({ journal, onClose }) {
                     {isStream ? (
                       <p className="text-stone-600 text-sm italic leading-relaxed">
                         This is your space to write freely. No prompts, no
-                        structure — use the writing panel below.
+                        structure.
                       </p>
                     ) : (
                       <div className="flex flex-col gap-2">
                         {journalPrompts.map((prompt, i) => (
                           <div key={i} className="flex gap-2">
-                            <span className="text-amber-400 text-xs mt-0.5">
-                              ✦
-                            </span>
+                            <span className="text-amber-400 text-xs mt-0.5">✦</span>
                             <p className="text-stone-600 text-sm leading-relaxed">
                               {prompt}
                             </p>
@@ -257,7 +219,7 @@ export default function BookViewer({ journal, onClose }) {
             </div>
           </Page>
 
-          {/* Right — open spread companion (today); writing happens below */}
+          {/* Right — today page */}
           <Page>
             <div className="h-full p-6 sm:p-8 flex flex-col justify-between">
               <div>
@@ -274,11 +236,9 @@ export default function BookViewer({ journal, onClose }) {
                   </p>
                 </div>
                 <p className="text-stone-600 text-sm leading-relaxed">
-                  Your draft lives in the{" "}
-                  <span className="text-amber-900 font-medium">
-                    writing panel
-                  </span>{" "}
-                  under this book — same paper, uninterrupted focus.
+                  Ready to write? Head to the{" "}
+                  <span className="text-amber-900 font-medium">writing panel</span>{" "}
+                  to add a new entry to this journal.
                 </p>
               </div>
               <div className="mt-auto space-y-3 opacity-70">
@@ -289,7 +249,7 @@ export default function BookViewer({ journal, onClose }) {
             </div>
           </Page>
 
-          {/* Each saved entry: read-only spread (left + right) */}
+          {/* Each saved entry — read only */}
           {entries.flatMap((entry) => [
             <Page key={`${entry.id}-a`}>
               <div className="h-full p-6 sm:p-8 flex flex-col min-h-0">
@@ -309,9 +269,7 @@ export default function BookViewer({ journal, onClose }) {
                 <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 pr-1">
                   {Object.entries(entry.content || {}).map(([key, val]) => (
                     <div key={key}>
-                      <p className="text-amber-800 text-xs font-medium mb-1">
-                        {key}
-                      </p>
+                      <p className="text-amber-800 text-xs font-medium mb-1">{key}</p>
                       <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-wrap">
                         {val}
                       </p>
@@ -338,85 +296,21 @@ export default function BookViewer({ journal, onClose }) {
           ])}
         </HTMLFlipBook>
 
-        <button
-          type="button"
-          onClick={() => bookRef.current?.pageFlip()?.flipNext("top")}
-          className="text-stone-500 hover:text-stone-200 transition-colors text-2xl px-1 sm:px-2 shrink-0"
-          aria-label="Next spread"
-        >
-          ›
-        </button>
       </div>
-
-      {/* Writing panel — outside flip book to avoid DOM remount / focus loss */}
-      <div
-        className="mt-5 rounded-xl border border-amber-200/80 bg-amber-50 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)] ring-1 ring-amber-900/10"
-        style={{
-          width: "100%",
-          maxWidth: bookOuterMax - 48,
-        }}
-      >
-        <div className="flex items-center gap-3 px-6 pt-4">
-          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-300" />
-          <span className="text-amber-900/80 text-[10px] font-semibold uppercase tracking-[0.2em]">
-            Writing panel
-          </span>
-          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-300" />
-        </div>
-        <div className="p-6 pt-4">
-          {isStream ? (
-            <div className="flex flex-col gap-2">
-              <label className="text-amber-900 text-xs font-medium uppercase tracking-wider">
-                Stream of consciousness
-              </label>
-              <textarea
-                value={currentEntry.thoughts || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setCurrentEntry((prev) => ({ ...prev, thoughts: value }));
-                }}
-                placeholder="Start writing..."
-                rows={14}
-                className="w-full rounded-lg border border-amber-200/90 bg-amber-50/80 px-3 py-2 text-stone-800 text-sm leading-relaxed shadow-inner focus:outline-none focus:ring-2 focus:ring-amber-400/50 placeholder:text-amber-300/80 resize-y min-h-[220px]"
-                style={{
-                  backgroundImage:
-                    "repeating-linear-gradient(transparent, transparent 27px, rgba(233, 213, 161, 0.55) 27px, rgba(233, 213, 161, 0.55) 28px)",
-                  lineHeight: "28px",
-                  paddingTop: "6px",
-                }}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-6">
-              {journalPrompts.map((prompt, i) => (
-                <div key={i}>
-                  <label className="text-amber-900 text-xs font-medium block mb-1.5 leading-snug">
-                    {prompt}
-                  </label>
-                  <textarea
-                    value={currentEntry[prompt] || ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setCurrentEntry((prev) => ({
-                        ...prev,
-                        [prompt]: value,
-                      }));
-                    }}
-                    placeholder="Write here..."
-                    rows={3}
-                    className="w-full rounded-lg border border-amber-200/90 bg-amber-50/80 px-3 py-2 text-stone-800 text-sm leading-relaxed shadow-inner focus:outline-none focus:ring-2 focus:ring-amber-400/50 placeholder:text-amber-300/80 resize-y"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <p className="text-stone-600 text-xs mt-4 text-center">
-        Two-page spreads — use arrows to turn pages; open saved dates from the
-        index.
-      </p>
+      <div className="flex gap-6 mt-6">
+  <button
+    onClick={handleAnimatedPrev}
+    className="px-5 py-2 rounded-lg bg-stone-800 text-stone-300 hover:bg-stone-700 transition-colors text-sm"
+  >
+    ← Previous
+  </button>
+  <button
+    onClick={() => bookRef.current?.pageFlip()?.flipNext("top")}
+    className="px-5 py-2 rounded-lg bg-stone-800 text-stone-300 hover:bg-stone-700 transition-colors text-sm"
+  >
+    Next →
+  </button>
+</div>
     </div>
   );
 }
