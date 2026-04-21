@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const journalOptions = [
   { type: 'today_tomorrow', name: 'Today & Tomorrow', subtitle: 'Daily accountability' },
@@ -40,6 +40,13 @@ export default function WritingPanel() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+  
+  useEffect(() => {
+    if (location.state?.recommended) {
+      setSelectedType(location.state.recommended)
+    }
+  }, [])
 
   const isStream = selectedType === 'stream'
   const journalPrompts = prompts[selectedType]

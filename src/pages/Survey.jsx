@@ -96,7 +96,7 @@ export default function Survey() {
     }
   }
 
-  navigate('/app/journals')
+  navigate('/app/writing', { state: { recommended: selected } })
 }
 
   if (recommendation) {
