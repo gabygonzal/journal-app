@@ -8,41 +8,34 @@ export default function ProtectedRoute() {
   const [checking, setChecking] = useState(true)
   const navigate = useNavigate()
 
+  async function checkAndRedirect(session) {
+    if (!session) { setChecking(false); return }
+    const { data } = await supabase
+      .from('user_journals').select('id')
+      .eq('user_id', session.user.id).limit(1)
+    if (data && data.length > 0) navigate('/app/dashboard')
+    else navigate('/app/survey')
+    setChecking(false)
+  }
+
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      if (session) {
-        const { data } = await supabase
-          .from('user_journals')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .limit(1)
-
-        if (data && data.length > 0) {
-          navigate('/app/dashboard')
-        } else {
-          navigate('/app/survey')
-        }
-      }
-      setChecking(false)
+      checkAndRedirect(session)
     })
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
   if (session === undefined || checking) return null
-  if (!session) return <Navigate to="/login" />
+  if (!session) return <Navigate to="/" />
 
   return (
-    <div className="min-h-screen bg-stone-950 flex flex-col">
+    <>
       <Navbar />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-    </div>
+      <Outlet />
+    </>
   )
 }

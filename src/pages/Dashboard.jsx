@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import './journal.css'
 
 const journalColors = {
-  today_tomorrow: '#b45309',
-  self_eval: '#0f766e',
-  goal: '#7c3aed',
-  stream: '#be123c',
+  today_tomorrow: '#8b6a30',
+  self_eval: '#5a7a50',
+  goal: '#6a5a7a',
+  stream: '#7a5a5a',
 }
 
 const journalNames = {
@@ -16,127 +18,129 @@ const journalNames = {
   stream: 'Stream of Consciousness',
 }
 
+function calculateStreak(entries) {
+  if (!entries.length) return 0
+  let streak = 0
+  const dates = [...new Set(entries.map(e => e.created_at.split('T')[0]))].sort().reverse()
+  for (let i = 0; i < dates.length; i++) {
+    const expected = new Date()
+    expected.setDate(expected.getDate() - i)
+    if (dates[i] === expected.toISOString().split('T')[0]) streak++
+    else break
+  }
+  return streak
+}
+
 export default function Dashboard() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
-  useEffect(() => {
-    loadEntries()
-  }, [])
+  useEffect(() => { loadEntries() }, [])
 
   async function loadEntries() {
     const { data: { user } } = await supabase.auth.getUser()
     const { data } = await supabase
-      .from('entries')
-      .select('*')
-      .eq('user_id', user.id)
+      .from('entries').select('*').eq('user_id', user.id)
       .order('created_at', { ascending: false })
     if (data) setEntries(data)
     setLoading(false)
   }
 
-  // entries per journal type
   const countsByType = Object.keys(journalNames).map(type => ({
     name: journalNames[type].split(' ')[0],
     entries: entries.filter(e => e.journal_type === type).length,
-    fill: journalColors[type]
+    color: journalColors[type],
   }))
 
-  // entries per day for last 7 days
   const last7 = [...Array(7)].map((_, i) => {
     const d = new Date()
     d.setDate(d.getDate() - (6 - i))
-    const label = d.toLocaleDateString('en-US', { weekday: 'short' })
-    const dateStr = d.toISOString().split('T')[0]
     return {
-      name: label,
-      entries: entries.filter(e => e.created_at.startsWith(dateStr)).length
+      name: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      entries: entries.filter(e => e.created_at.startsWith(d.toISOString().split('T')[0])).length,
     }
   })
 
   const totalEntries = entries.length
   const streak = calculateStreak(entries)
-  const mostUsed = countsByType.sort((a, b) => b.entries - a.entries)[0]
+  const mostUsed = [...countsByType].sort((a, b) => b.entries - a.entries)[0]
 
-  function calculateStreak(entries) {
-    if (!entries.length) return 0
-    let streak = 0
-    const today = new Date().toISOString().split('T')[0]
-    const dates = [...new Set(entries.map(e => e.created_at.split('T')[0]))].sort().reverse()
-    for (let i = 0; i < dates.length; i++) {
-      const expected = new Date()
-      expected.setDate(expected.getDate() - i)
-      const expectedStr = expected.toISOString().split('T')[0]
-      if (dates[i] === expectedStr) streak++
-      else break
-    }
-    return streak
+  const tooltipStyle = {
+    contentStyle: { background: '#f5f0e4', border: '0.5px solid rgba(160,140,100,0.4)', borderRadius: 2, fontFamily: 'Inter', fontSize: 11 },
+    labelStyle: { color: '#3a3020', fontFamily: 'Inter', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase' },
+    itemStyle: { color: '#7a6a48' },
+    cursor: { fill: 'rgba(160,140,100,0.06)' },
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-      <p className="text-stone-500">Loading...</p>
+    <div className="journal-page">
+      <div className="journal-content" style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontFamily: 'Caveat', fontSize: 22, color: '#a09070' }}>Opening your journal...</p>
+      </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-stone-950 p-8">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-semibold text-stone-100 mb-2">Dashboard</h1>
-        <p className="text-stone-400 mb-10">Your journaling overview</p>
+    <div className="journal-page">
+      <div className="journal-content">
 
-        {/* Stats row */}
-        <div className="grid grid-cols-3 gap-6 mb-10">
-          <div className="bg-stone-900 rounded-2xl p-6 border border-stone-800">
-            <p className="text-stone-500 text-sm mb-1">Total entries</p>
-            <p className="text-4xl font-semibold text-stone-100">{totalEntries}</p>
+        <div className="journal-page-header">
+          <h1 className="journal-page-title">Dashboard</h1>
+          <span className="journal-page-date">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+        </div>
+
+        <div className="journal-section-label">At a glance</div>
+
+        {/* Stats — 128px total, each column left-aligned */}
+        <div className="journal-stats-grid">
+          <div className="journal-stat">
+            <div className="journal-stat-label">Total entries</div>
+            <div className="journal-stat-value">{totalEntries}</div>
           </div>
-          <div className="bg-stone-900 rounded-2xl p-6 border border-stone-800">
-            <p className="text-stone-500 text-sm mb-1">Day streak</p>
-            <p className="text-4xl font-semibold text-amber-400">{streak} 🔥</p>
+          <div className="journal-stat">
+            <div className="journal-stat-label">Day streak</div>
+            <div className="journal-stat-value">{streak}</div>
+            <div className="journal-stat-sub">days in a row</div>
           </div>
-          <div className="bg-stone-900 rounded-2xl p-6 border border-stone-800">
-            <p className="text-stone-500 text-sm mb-1">Most used journal</p>
-            <p className="text-xl font-semibold text-stone-100">
-              {totalEntries > 0 ? mostUsed.name : '—'}
-            </p>
+          <div className="journal-stat">
+            <div className="journal-stat-label">Most used</div>
+            {totalEntries > 0
+              ? <div className="journal-stat-value-sm">{mostUsed.name}</div>
+              : <div className="journal-stat-value">—</div>
+            }
           </div>
         </div>
 
-        {/* Charts row */}
-        <div className="grid grid-cols-2 gap-6">
-          <div className="bg-stone-900 rounded-2xl p-6 border border-stone-800">
-            <p className="text-stone-300 font-medium mb-6">Entries this week</p>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={last7}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#292524" />
-                <XAxis dataKey="name" stroke="#78716c" tick={{ fontSize: 12 }} />
-                <YAxis stroke="#78716c" tick={{ fontSize: 12 }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ background: '#1c1917', border: '1px solid #292524', borderRadius: 8 }}
-                  labelStyle={{ color: '#e7e5e4' }}
-                  itemStyle={{ color: '#d97706' }}
-                />
-                <Bar dataKey="entries" fill="#b45309" radius={[4, 4, 0, 0]} />
+        {/* Chart labels */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, flexShrink: 0 }}>
+          <div className="journal-chart-label">Entries this week</div>
+          <div className="journal-chart-label">Entries by journal</div>
+        </div>
+
+        {/* Charts */}
+        <div className="journal-charts-row">
+          <div className="journal-chart-card">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={last7} barSize={14}>
+                <XAxis dataKey="name" tick={{ fontFamily: 'Inter', fontSize: 9, fill: '#a09070' }} axisLine={false} tickLine={false} />
+                <YAxis hide allowDecimals={false} />
+                <Tooltip {...tooltipStyle} />
+                <Bar dataKey="entries" fill="#8b6a30" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          <div className="bg-stone-900 rounded-2xl p-6 border border-stone-800">
-            <p className="text-stone-300 font-medium mb-6">Entries by journal</p>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={countsByType}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#292524" />
-                <XAxis dataKey="name" stroke="#78716c" tick={{ fontSize: 12 }} />
-                <YAxis stroke="#78716c" tick={{ fontSize: 12 }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ background: '#1c1917', border: '1px solid #292524', borderRadius: 8 }}
-                  labelStyle={{ color: '#e7e5e4' }}
-                  itemStyle={{ color: '#d97706' }}
-                />
-                <Bar dataKey="entries" radius={[4, 4, 0, 0]}>
-                  {countsByType.map((entry, index) => (
-                    <rect key={index} fill={entry.fill} />
+          <div className="journal-chart-card">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={countsByType} barSize={14}>
+                <XAxis dataKey="name" tick={{ fontFamily: 'Inter', fontSize: 9, fill: '#a09070' }} axisLine={false} tickLine={false} />
+                <YAxis hide allowDecimals={false} />
+                <Tooltip {...tooltipStyle} />
+                <Bar dataKey="entries" radius={[2, 2, 0, 0]}>
+                  {countsByType.map((entry, i) => (
+                    <rect key={i} fill={entry.color} />
                   ))}
                 </Bar>
               </BarChart>
@@ -144,42 +148,30 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent entries */}
-        {entries.length > 0 && (
-          <div className="mt-6 bg-stone-900 rounded-2xl p-6 border border-stone-800">
-            <p className="text-stone-300 font-medium mb-4">Recent entries</p>
-            <div className="flex flex-col gap-3">
-              {entries.slice(0, 5).map(entry => (
-                <div key={entry.id} className="flex justify-between items-center py-2 border-b border-stone-800 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ background: journalColors[entry.journal_type] }}
-                    />
-                    <span className="text-stone-300 text-sm">{journalNames[entry.journal_type]}</span>
-                  </div>
-                  <span className="text-stone-500 text-xs">
-                    {new Date(entry.created_at).toLocaleDateString('en-US', {
-                      weekday: 'short', month: 'short', day: 'numeric'
-                    })}
-                  </span>
+        {totalEntries > 0 ? (
+          <>
+            <div className="journal-section-label">Recent entries</div>
+            {entries.slice(0, 4).map(entry => (
+              <div key={entry.id} className="journal-entry-row">
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="journal-entry-dot" style={{ background: journalColors[entry.journal_type] }} />
+                  <span className="journal-entry-name">{journalNames[entry.journal_type]}</span>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {totalEntries === 0 && (
-          <div className="mt-6 bg-stone-900 rounded-2xl p-8 border border-stone-800 text-center">
-            <p className="text-stone-400 mb-4">No entries yet — start writing to see your stats here.</p>
-            <button
-              onClick={() => window.location.href = '/app/writing'}
-              className="px-6 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-sm transition-colors"
-            >
+                <span className="journal-entry-date">
+                  {new Date(entry.created_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+            ))}
+          </>
+        ) : (
+          <div className="journal-empty">
+            <p className="journal-empty-text">No entries yet — your story begins here.</p>
+            <button className="journal-empty-btn" onClick={() => navigate('/app/writing')}>
               Write your first entry
             </button>
           </div>
         )}
+
       </div>
     </div>
   )

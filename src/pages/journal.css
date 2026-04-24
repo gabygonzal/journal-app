@@ -1,0 +1,590 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Caveat:wght@400;500;600&family=Inter:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── FIXED NAVBAR ── */
+.journal-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 60px;
+  background: linear-gradient(160deg, #ede8d8 0%, #f5f0e4 100%);
+  border-bottom: 0.5px solid rgba(160, 140, 100, 0.35);
+}
+
+.journal-nav-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #7a6a48;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.journal-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  height: 32px;
+}
+
+.journal-nav-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #a09070;
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.journal-nav-link:hover { color: #5a4a30; }
+.journal-nav-link.active { color: #1a1208; border-bottom-color: #1a1208; }
+
+.journal-nav-signout {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #c8b890;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+.journal-nav-signout:hover { color: #a09070; }
+
+/* ── PAGE SHELL ── */
+.journal-page {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(160deg, #ede8d8 0%, #f5f0e4 100%);
+}
+
+/* ruled lines */
+.journal-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    transparent 0px,
+    transparent 31px,
+    rgba(160, 140, 100, 0.18) 31px,
+    rgba(160, 140, 100, 0.18) 32px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── CONTENT AREA — starts below fixed nav ── */
+.journal-content {
+  position: absolute;
+  top: 32px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 60px;
+  overflow: hidden;
+}
+
+/* ── PAGE HEADER — 64px ── */
+.journal-page-header {
+  height: 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.journal-page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: #1a1208;
+  line-height: 32px;
+}
+
+.journal-page-date {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #a09070;
+  line-height: 32px;
+}
+
+/* ── SECTION LABEL — 32px ── */
+.journal-section-label {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #a09070;
+  flex-shrink: 0;
+}
+
+/* ── DASHBOARD STATS ── */
+.journal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 128px;
+  flex-shrink: 0;
+}
+
+.journal-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-right: 32px;
+}
+.journal-stat + .journal-stat {
+  padding-left: 32px;
+  border-left: 0.5px solid rgba(160, 140, 100, 0.25);
+}
+
+.journal-stat-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #a09070;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.journal-stat-value {
+  font-family: 'Caveat', cursive;
+  font-size: 52px;
+  font-weight: 500;
+  color: #1a1208;
+  line-height: 64px;
+}
+
+.journal-stat-value-sm {
+  font-family: 'Caveat', cursive;
+  font-size: 24px;
+  font-weight: 500;
+  color: #1a1208;
+  line-height: 64px;
+}
+
+.journal-stat-sub {
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
+  color: #7a6a48;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── CHARTS ── */
+.journal-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  flex: 1;
+  min-height: 0;
+}
+
+.journal-chart-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.journal-chart-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #a09070;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── RECENT ENTRIES ── */
+.journal-entry-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.journal-entry-name {
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
+  color: #3a3020;
+}
+
+.journal-entry-date {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #a09070;
+}
+
+.journal-entry-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+/* ── WRITING PANEL ── */
+.journal-selector {
+  display: flex;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.journal-tab {
+  padding: 0 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a09070;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding-left: 0;
+  margin-right: 32px;
+}
+.journal-tab:hover { color: #5a4a30; }
+.journal-tab.active { color: #1a1208; font-weight: 500; }
+
+.journal-writing-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.journal-prompt-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7a6a48;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.journal-textarea {
+  width: 100%;
+  height: 64px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  color: #2a1f0e;
+  line-height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.journal-textarea::placeholder { color: rgba(160, 140, 100, 0.4); font-family: 'Caveat', cursive; }
+
+.journal-stream-textarea {
+  flex: 1;
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  color: #2a1f0e;
+  line-height: 32px;
+  padding: 0;
+}
+.journal-stream-textarea::placeholder { color: rgba(160, 140, 100, 0.4); font-family: 'Caveat', cursive; }
+
+.journal-save-row {
+  height: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.journal-save-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #a09070;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+.journal-save-link:hover { color: #5a4a30; }
+
+.journal-save-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #1a1208;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid #1a1208;
+  cursor: pointer;
+  padding: 0 0 2px;
+  transition: color 0.2s;
+}
+.journal-save-btn:hover { color: #5a4a30; border-bottom-color: #5a4a30; }
+.journal-save-btn:disabled { color: #c8b890; border-bottom-color: #c8b890; cursor: default; }
+
+/* ── MY JOURNALS ── */
+.journal-books-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  justify-items: center;
+}
+
+.journal-book-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.journal-book-drawing {
+  width: 90px;
+  height: 126px;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+.journal-book-btn:hover .journal-book-drawing {
+  transform: translateY(-8px);
+  filter: drop-shadow(0 16px 24px rgba(0,0,0,0.18));
+}
+
+.journal-book-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  color: #3a3020;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.journal-book-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #a09070;
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* ── SURVEY ── */
+.survey-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 18, 8, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.survey-card {
+  width: 100%;
+  max-width: 520px;
+  background: linear-gradient(160deg, #ede8d8 0%, #f5f0e4 100%);
+  position: relative;
+  padding: 0 48px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.survey-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    transparent 0px, transparent 31px,
+    rgba(160, 140, 100, 0.18) 31px,
+    rgba(160, 140, 100, 0.18) 32px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.survey-card > * { position: relative; z-index: 1; }
+
+.survey-progress {
+  display: flex;
+  gap: 8px;
+  height: 32px;
+  align-items: center;
+}
+
+.survey-progress-bar {
+  flex: 1;
+  height: 1px;
+  background: rgba(160, 140, 100, 0.3);
+}
+.survey-progress-bar.filled { background: #3a3020; }
+
+.survey-question {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #1a1208;
+  line-height: 32px;
+  padding-top: 8px;
+}
+
+.survey-answers { display: flex; flex-direction: column; }
+
+.survey-answer-btn {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  color: #3a3020;
+  text-align: left;
+  transition: padding-left 0.15s;
+  width: 100%;
+}
+.survey-answer-btn:hover { padding-left: 8px; color: #1a1208; }
+.survey-answer-arrow { font-size: 11px; color: #c8b890; opacity: 0; transition: opacity 0.15s; }
+.survey-answer-btn:hover .survey-answer-arrow { opacity: 1; }
+
+.survey-rec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.survey-rec-item {
+  padding: 8px 16px 8px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: background 0.15s;
+  border-radius: 2px;
+}
+.survey-rec-item:hover { background: rgba(160, 140, 100, 0.08); }
+.survey-rec-item.selected { background: rgba(160, 140, 100, 0.15); }
+
+.survey-rec-recommended {
+  font-family: 'Inter', sans-serif;
+  font-size: 7px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7a6a48;
+  display: block;
+}
+
+.survey-rec-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  color: #1a1208;
+  display: block;
+  line-height: 1.3;
+}
+
+.survey-rec-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  color: #a09070;
+  line-height: 1.4;
+}
+
+.survey-confirm-btn {
+  width: calc(100% + 96px);
+  margin-left: -48px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-top: 0.5px solid rgba(160, 140, 100, 0.3);
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #1a1208;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.survey-confirm-btn:hover { background: rgba(160, 140, 100, 0.08); }
+
+/* ── EMPTY STATE ── */
+.journal-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.journal-empty-text {
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  color: #a09070;
+}
+.journal-empty-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #1a1208;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid #1a1208;
+  cursor: pointer;
+  padding: 0 0 2px;
+}

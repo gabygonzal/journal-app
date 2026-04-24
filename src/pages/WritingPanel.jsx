@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { useNavigate, useLocation } from 'react-router-dom'
+import './journal.css'
 
 const journalOptions = [
-  { type: 'today_tomorrow', name: 'Today & Tomorrow', subtitle: 'Daily accountability' },
-  { type: 'self_eval', name: 'Self-Evaluation', subtitle: 'Know yourself better' },
-  { type: 'goal', name: 'Goal Journal', subtitle: 'Track your progress' },
-  { type: 'stream', name: 'Stream of Consciousness', subtitle: 'Free your mind' },
+  { type: 'today_tomorrow', name: 'Today & Tomorrow' },
+  { type: 'self_eval', name: 'Self-Evaluation' },
+  { type: 'goal', name: 'Goal Journal' },
+  { type: 'stream', name: 'Stream of Consciousness' },
 ]
 
 const prompts = {
@@ -41,11 +42,9 @@ export default function WritingPanel() {
   const [saved, setSaved] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   useEffect(() => {
-    if (location.state?.recommended) {
-      setSelectedType(location.state.recommended)
-    }
+    if (location.state?.recommended) setSelectedType(location.state.recommended)
   }, [])
 
   const isStream = selectedType === 'stream'
@@ -74,93 +73,78 @@ export default function WritingPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-semibold text-stone-100 mb-2">Writing Panel</h1>
-        <p className="text-stone-400 mb-8">
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-        </p>
+    <div className="journal-page">
+      <div className="journal-content">
 
-        {/* Journal selector */}
-        <div className="grid grid-cols-4 gap-3 mb-8">
-          {journalOptions.map((j) => (
+        {/* spacer — 32px so title doesn't hug top */}
+        <div style={{ height: 32, flexShrink: 0 }} />
+
+        {/* Header — 64px */}
+        <div className="journal-page-header">
+          <h1 className="journal-page-title">Writing Panel</h1>
+          <span className="journal-page-date">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+        </div>
+
+        {/* spacer — 32px */}
+        <div style={{ height: 32, flexShrink: 0 }} />
+
+        {/* Journal selector — 32px */}
+        <div className="journal-selector">
+          {journalOptions.map(j => (
             <button
               key={j.type}
               onClick={() => handleTypeChange(j.type)}
-              className={`p-3 rounded-xl border text-left transition-all ${
-                selectedType === j.type
-                  ? 'border-amber-500 bg-stone-800'
-                  : 'border-stone-700 bg-stone-900 hover:border-stone-500'
-              }`}
+              className={`journal-tab ${selectedType === j.type ? 'active' : ''}`}
             >
-              <p className="text-stone-100 text-xs font-medium leading-tight">{j.name}</p>
-              <p className="text-stone-500 text-xs mt-0.5">{j.subtitle}</p>
+              {j.name}
             </button>
           ))}
         </div>
 
         {/* Writing area */}
-        <div className="bg-amber-50 rounded-2xl p-8 shadow-xl">
-          <div className="border-b border-amber-200 pb-4 mb-6">
-            <p className="text-amber-900 text-xs font-medium uppercase tracking-widest">
-              {journalOptions.find(j => j.type === selectedType)?.name}
-            </p>
-          </div>
-
+        <div className="journal-writing-area">
           {isStream ? (
             <textarea
+              className="journal-stream-textarea"
               value={currentEntry.thoughts || ''}
-              onChange={(e) => setCurrentEntry({ thoughts: e.target.value })}
+              onChange={e => setCurrentEntry({ thoughts: e.target.value })}
               placeholder="Let your thoughts flow freely..."
-              className="w-full bg-transparent text-stone-700 text-sm leading-relaxed resize-none focus:outline-none placeholder-amber-300 min-h-96"
-              style={{
-                backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, #e9d5a1 27px, #e9d5a1 28px)',
-                lineHeight: '28px',
-                paddingTop: '4px',
-              }}
             />
           ) : (
-            <div className="flex flex-col gap-6">
-              {journalPrompts.map((prompt, i) => (
-                <div key={i}>
-                  <p className="text-amber-800 text-xs font-medium mb-2">{prompt}</p>
-                  <textarea
-                    value={currentEntry[prompt] || ''}
-                    onChange={(e) => {
-                      const value = e.target.value
-                      setCurrentEntry(prev => ({ ...prev, [prompt]: value }))
-                    }}
-                    placeholder="Write here..."
-                    rows={3}
-                    className="w-full bg-transparent text-stone-700 text-sm leading-relaxed resize-none focus:outline-none pb-2 placeholder-amber-300"
-                    style={{
-                      backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, #e9d5a1 27px, #e9d5a1 28px)',
-                      lineHeight: '28px',
-                      paddingTop: '4px',
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
+            journalPrompts.map((prompt, i) => (
+              <div key={i} style={{ flexShrink: 0 }}>
+                <div className="journal-prompt-label">{prompt}</div>
+                <textarea
+                  className="journal-textarea"
+                  value={currentEntry[prompt] || ''}
+                  onChange={e => {
+                    const value = e.target.value
+                    setCurrentEntry(prev => ({ ...prev, [prompt]: value }))
+                  }}
+                  placeholder="Write here..."
+                  rows={2}
+                />
+              </div>
+            ))
           )}
         </div>
 
-        {/* Save button */}
-        <div className="flex justify-between items-center mt-6">
-          <button
-            onClick={() => navigate('/app/journals')}
-            className="text-stone-500 text-sm hover:text-stone-300 transition-colors"
-          >
+        {/* Save row */}
+        <div className="journal-save-row">
+          <button className="journal-save-link" onClick={() => navigate('/app/journals')}>
             View my journals →
           </button>
           <button
+            className="journal-save-btn"
             onClick={handleSave}
             disabled={saving || Object.keys(currentEntry).length === 0}
-            className="px-8 py-3 rounded-xl bg-amber-700 hover:bg-amber-600 text-white font-medium transition-colors disabled:opacity-40"
           >
-            {saving ? 'Saving...' : saved ? 'Saved! ✓' : 'Save entry'}
+            {saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save entry'}
           </button>
         </div>
+
       </div>
     </div>
   )

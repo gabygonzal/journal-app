@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import '../pages/journal.css'
 
 export default function Navbar() {
   const navigate = useNavigate()
@@ -17,28 +18,19 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className="w-full bg-stone-900 border-b border-stone-800 px-8 py-4 flex justify-between items-center">
-      <span className="text-amber-500 font-semibold tracking-wide text-sm">
-        MY JOURNAL
-      </span>
-      <div className="flex items-center gap-8">
+    <nav className="journal-nav">
+      <span className="journal-nav-brand">My Journal</span>
+      <div className="journal-nav-links">
         {links.map(link => (
           <button
             key={link.path}
             onClick={() => navigate(link.path)}
-            className={`text-sm transition-colors ${
-              location.pathname === link.path
-                ? 'text-amber-400 font-medium'
-                : 'text-stone-400 hover:text-stone-200'
-            }`}
+            className={`journal-nav-link ${location.pathname === link.path ? 'active' : ''}`}
           >
             {link.label}
           </button>
         ))}
-        <button
-          onClick={handleLogout}
-          className="text-sm text-stone-600 hover:text-stone-400 transition-colors"
-        >
+        <button onClick={handleLogout} className="journal-nav-signout">
           Sign out
         </button>
       </div>

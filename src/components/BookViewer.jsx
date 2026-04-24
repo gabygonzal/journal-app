@@ -8,6 +8,7 @@ import {
 import HTMLFlipBook from "react-pageflip";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import "../pages/journal.css";
 
 const prompts = {
   today_tomorrow: [
@@ -34,13 +35,42 @@ const prompts = {
   stream: [],
 };
 
-const PAGE_WIDTH = 420;
-const PAGE_HEIGHT = 600;
+const PAGE_WIDTH = 400;
+const PAGE_HEIGHT = 560;
 const FLIP_MS = 1000;
 
-const Page = forwardRef(({ children, className }, ref) => (
-  <div ref={ref} className={`bg-amber-50 ${className ?? ""}`}>
-    {children}
+const Page = forwardRef(({ children }, ref) => (
+  <div
+    ref={ref}
+    style={{
+      background: "linear-gradient(160deg, #ede8d8 0%, #f5f0e4 100%)",
+      height: "100%",
+      position: "relative",
+      overflow: "hidden",
+      backfaceVisibility: "hidden",
+      WebkitBackfaceVisibility: "hidden",
+    }}
+  >
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        backgroundImage:
+          "repeating-linear-gradient(transparent, transparent 31px, rgba(160,140,100,0.2) 31px, rgba(160,140,100,0.2) 32px)",
+        pointerEvents: "none",
+        zIndex: 0,
+      }}
+    />
+    <div
+      style={{
+        position: "relative",
+        zIndex: 1,
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
+      {children}
+    </div>
   </div>
 ));
 
@@ -76,7 +106,9 @@ export default function BookViewer({ journal, onClose }) {
   }, [disableFlipByClick]);
 
   async function loadEntries() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const { data } = await supabase
       .from("entries")
       .select("*")
@@ -87,131 +119,234 @@ export default function BookViewer({ journal, onClose }) {
   }
 
   function flipToEntry(entryIndex) {
-    const page = entrySpreadStartIndex(entryIndex);
-    bookRef.current?.pageFlip()?.flip(page, "top");
+    bookRef.current?.pageFlip()?.flip(entrySpreadStartIndex(entryIndex), "top");
   }
 
   function handleAnimatedPrev() {
     const api = bookRef.current?.pageFlip();
-    if (!api) return;
-    if (api.getCurrentPageIndex() <= 0) return;
+    if (!api || api.getCurrentPageIndex() <= 0) return;
     pendingPrevFlipRef.current = true;
     setDisableFlipByClick(false);
   }
 
   const journalPrompts = prompts[journal.type];
   const isStream = journal.type === "stream";
-  const bookOuterMax = PAGE_WIDTH * 2 + 80;
+
+  const labelStyle = {
+    fontFamily: "Inter, sans-serif",
+    fontSize: 8,
+    letterSpacing: "0.2em",
+    textTransform: "uppercase",
+    color: "#a09070",
+    lineHeight: "32px",
+  };
+
+  const headStyle = {
+    height: 32,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  };
 
   return (
-    <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center p-4 pb-10">
-      {/* Header */}
+    <div
+      className="survey-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
-        className="flex justify-between items-center w-full mb-6 px-1"
-        style={{ maxWidth: bookOuterMax }}
+        style={{
+          background: "linear-gradient(160deg, #ede8d8 0%, #f5f0e4 100%)",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.25)",
+          position: "relative",
+          maxWidth: PAGE_WIDTH * 2 + 48,
+          width: "100%",
+          overflow: "hidden",
+        }}
       >
-        <button
-          onClick={onClose}
-          className="text-stone-400 hover:text-stone-200 transition-colors text-sm"
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0 24px",
+            height: 32,
+            borderBottom: "0.5px solid rgba(160,140,100,0.35)",
+          }}
         >
-          ← Back to journals
-        </button>
-        <h2 className="text-stone-200 font-medium">{journal.name}</h2>
-        <button
-          onClick={() => navigate('/app/writing')}
-          className="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-sm transition-colors"
-        >
-          Write new entry →
-        </button>
-      </div>
+          <button
+            onClick={onClose}
+            style={{
+              fontFamily: "Inter, sans-serif",
+              fontSize: 9,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "#a09070",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            ← Back
+          </button>
+          <span
+            style={{
+              fontFamily: "Playfair Display, serif",
+              fontSize: 13,
+              color: "#1a1208",
+            }}
+          >
+            {journal.name}
+          </span>
+          <button
+            onClick={() => navigate("/app/writing")}
+            style={{
+              fontFamily: "Inter, sans-serif",
+              fontSize: 9,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "#1a1208",
+              background: "none",
+              border: "none",
+              borderBottom: "0.5px solid #1a1208",
+              cursor: "pointer",
+              padding: "0 0 2px",
+            }}
+          >
+            Write new entry →
+          </button>
+        </div>
 
-      {/* Book */}
-      <div
-        className="relative flex w-full max-w-full items-center justify-center gap-2 overflow-x-auto sm:gap-4"
-        style={{ maxWidth: bookOuterMax }}
-      >
-
+        {/* Book */}
         <HTMLFlipBook
-           ref={bookRef}
-           width={PAGE_WIDTH}
-           height={PAGE_HEIGHT}
-           size="fixed"
-           drawShadow={true}
-           maxShadowOpacity={0.62}
-           flippingTime={FLIP_MS}
-           className="shadow-2xl rounded-sm"
-           showCover={false}
-           mobileScrollSupport={true}
-           disableFlipByClick={false}
-           useMouseEvents={true}
-           usePortrait={false}
-           clickEventForward={true}
-           renderOnlyPageLengthChange={true}
+          ref={bookRef}
+          width={PAGE_WIDTH}
+          height={PAGE_HEIGHT}
+          size="fixed"
+          drawShadow={true}
+          maxShadowOpacity={0.3}
+          flippingTime={FLIP_MS}
+          showCover={false}
+          mobileScrollSupport={true}
+          disableFlipByClick={false}
+          useMouseEvents={true}
+          usePortrait={false}
+          clickEventForward={true}
+          renderOnlyPageLengthChange={true}
+          style={{ boxShadow: "none" }}
         >
-          {/* Left — index of all past entries */}
+          {/* Left — index */}
           <Page>
-            <div className="h-full p-6 sm:p-8 flex flex-col min-h-0">
-              <div className="border-b border-amber-200 pb-3 mb-4 shrink-0">
-                <p className="text-amber-900 text-xs font-medium uppercase tracking-widest">
-                  Past entries
-                </p>
-                <p className="text-amber-700 text-xs mt-1">
-                  Tap a date to open it in the book
-                </p>
+            <div
+              style={{
+                height: "100%",
+                padding: "0 24px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div style={headStyle}>
+                <span style={labelStyle}>Past entries</span>
+                <span style={{ ...labelStyle, fontSize: 7 }}>
+                  tap date to jump
+                </span>
               </div>
-
-              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3">
+              <div style={{ flex: 1, overflowY: "auto" }}>
                 {entries.length > 0 ? (
-                  <ul className="flex flex-col gap-2 pr-1">
-                    {entries.map((entry, i) => (
-                      <li key={entry.id}>
-                        <button
-                          type="button"
-                          onClick={() => flipToEntry(i)}
-                          className="w-full text-left rounded-lg border border-amber-300/50 bg-amber-100/40 hover:bg-amber-200/50 px-3 py-2.5 transition-colors"
-                        >
-                          <span className="text-amber-950 text-sm font-medium block">
-                            {new Date(entry.created_at).toLocaleDateString("en-US", {
-                              weekday: "short",
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </span>
-                          <span className="text-amber-800/80 text-xs">
-                            Entry {entries.length - i} — read in book
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  entries.map((entry, i) => (
+                    <button
+                      key={entry.id}
+                      onClick={() => flipToEntry(i)}
+                      style={{
+                        height: 32,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderBottom: "0.5px solid rgba(160,140,100,0.2)",
+                        background: "none",
+                        border: "none",
+                        borderBottom: "0.5px solid rgba(160,140,100,0.2)",
+                        cursor: "pointer",
+                        padding: "0 2px",
+                        width: "100%",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "Caveat, cursive",
+                          fontSize: 16,
+                          color: "#3a3020",
+                        }}
+                      >
+                        {new Date(entry.created_at).toLocaleDateString(
+                          "en-US",
+                          { weekday: "short", month: "short", day: "numeric" },
+                        )}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: "Inter, sans-serif",
+                          fontSize: 8,
+                          color: "#a09070",
+                          letterSpacing: "0.1em",
+                        }}
+                      >
+                        Entry {entries.length - i}
+                      </span>
+                    </button>
+                  ))
                 ) : (
-                  <p className="text-stone-500 text-sm leading-relaxed">
-                    No saved entries yet. Write your first entry to see it here.
-                  </p>
-                )}
-
-                {entries.length === 0 && (
-                  <div className="mt-4 pt-4 border-t border-amber-200/80">
-                    <p className="text-amber-900 text-xs font-medium uppercase tracking-widest mb-3">
-                      {isStream ? "About this journal" : "Prompts"}
+                  <div>
+                    <p
+                      style={{
+                        fontFamily: "Caveat, cursive",
+                        fontSize: 16,
+                        color: "#a09070",
+                        lineHeight: "32px",
+                      }}
+                    >
+                      No entries yet.
                     </p>
-                    {isStream ? (
-                      <p className="text-stone-600 text-sm italic leading-relaxed">
-                        This is your space to write freely. No prompts, no
-                        structure.
+                    {!isStream &&
+                      journalPrompts.map((prompt, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            height: 32,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <span style={{ color: "#c8b890", fontSize: 8 }}>
+                            ✦
+                          </span>
+                          <span
+                            style={{
+                              fontFamily: "Inter, sans-serif",
+                              fontSize: 10,
+                              color: "#7a6a48",
+                            }}
+                          >
+                            {prompt}
+                          </span>
+                        </div>
+                      ))}
+                    {isStream && (
+                      <p
+                        style={{
+                          fontFamily: "Caveat, cursive",
+                          fontSize: 15,
+                          color: "#a09070",
+                          fontStyle: "italic",
+                          lineHeight: "32px",
+                        }}
+                      >
+                        Free writing, no structure.
                       </p>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        {journalPrompts.map((prompt, i) => (
-                          <div key={i} className="flex gap-2">
-                            <span className="text-amber-400 text-xs mt-0.5">✦</span>
-                            <p className="text-stone-600 text-sm leading-relaxed">
-                              {prompt}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
                     )}
                   </div>
                 )}
@@ -219,58 +354,91 @@ export default function BookViewer({ journal, onClose }) {
             </div>
           </Page>
 
-          {/* Right — today page */}
+          {/* Right — today */}
           <Page>
-            <div className="h-full p-6 sm:p-8 flex flex-col justify-between">
-              <div>
-                <div className="border-b border-amber-200 pb-3 mb-6">
-                  <p className="text-amber-900 text-xs font-medium uppercase tracking-widest">
-                    Today
-                  </p>
-                  <p className="text-amber-950 text-base font-serif mt-1">
-                    {new Date().toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-                <p className="text-stone-600 text-sm leading-relaxed">
-                  Ready to write? Head to the{" "}
-                  <span className="text-amber-900 font-medium">writing panel</span>{" "}
-                  to add a new entry to this journal.
-                </p>
+            <div
+              style={{
+                height: "100%",
+                padding: "0 24px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <div style={headStyle}>
+                <span style={labelStyle}>Today</span>
+                <span
+                  style={{
+                    fontFamily: "Playfair Display, serif",
+                    fontSize: 11,
+                    color: "#5a4a30",
+                    fontStyle: "italic",
+                    lineHeight: "32px",
+                  }}
+                >
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
               </div>
-              <div className="mt-auto space-y-3 opacity-70">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-px bg-amber-200 w-full" />
-                ))}
-              </div>
+              <p
+                style={{
+                  fontFamily: "Caveat, cursive",
+                  fontSize: 17,
+                  color: "#7a6a48",
+                  lineHeight: "32px",
+                }}
+              >
+                Ready to write? Head to the writing panel to add a new entry.
+              </p>
             </div>
           </Page>
 
-          {/* Each saved entry — read only */}
+          {/* Past entries */}
           {entries.flatMap((entry) => [
             <Page key={`${entry.id}-a`}>
-              <div className="h-full p-6 sm:p-8 flex flex-col min-h-0">
-                <div className="border-b border-amber-200 pb-3 mb-4 shrink-0">
-                  <p className="text-amber-900 text-xs font-medium uppercase tracking-widest">
-                    Saved entry
-                  </p>
-                  <p className="text-amber-800 text-sm mt-1">
+              <div
+                style={{
+                  height: "100%",
+                  padding: "0 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div style={headStyle}>
+                  <span style={labelStyle}>Saved entry</span>
+                  <span
+                    style={{
+                      fontFamily: "Caveat, cursive",
+                      fontSize: 14,
+                      color: "#7a6a48",
+                      lineHeight: "32px",
+                    }}
+                  >
                     {new Date(entry.created_at).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
+                      weekday: "short",
+                      month: "short",
                       day: "numeric",
                       year: "numeric",
                     })}
-                  </p>
+                  </span>
                 </div>
-                <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 pr-1">
+                <div style={{ flex: 1, overflowY: "auto" }}>
                   {Object.entries(entry.content || {}).map(([key, val]) => (
                     <div key={key}>
-                      <p className="text-amber-800 text-xs font-medium mb-1">{key}</p>
-                      <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-wrap">
+                      <div style={{ ...labelStyle, display: "block" }}>
+                        {key}
+                      </div>
+                      <p
+                        style={{
+                          fontFamily: "Caveat, cursive",
+                          fontSize: 17,
+                          color: "#2a1f0e",
+                          lineHeight: "32px",
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
                         {val}
                       </p>
                     </div>
@@ -279,38 +447,76 @@ export default function BookViewer({ journal, onClose }) {
               </div>
             </Page>,
             <Page key={`${entry.id}-b`}>
-              <div className="h-full p-6 sm:p-8 flex flex-col text-stone-500">
-                <p className="text-xs uppercase tracking-widest text-amber-800/70 mb-6">
-                  End of spread
+              <div
+                style={{
+                  height: "100%",
+                  padding: "0 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "Caveat, cursive",
+                    fontSize: 15,
+                    color: "#a09070",
+                    fontStyle: "italic",
+                    lineHeight: "32px",
+                  }}
+                >
+                  Drag the corner or use arrows to keep reading.
                 </p>
-                <p className="text-sm leading-relaxed italic flex-1">
-                  Use the arrows or the index to keep reading your journal.
-                </p>
-                <div className="mt-auto space-y-3">
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} className="h-px bg-amber-200 w-full" />
-                  ))}
-                </div>
               </div>
             </Page>,
           ])}
         </HTMLFlipBook>
 
+        {/* Footer */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 32,
+            height: 32,
+            borderTop: "0.5px solid rgba(160,140,100,0.35)",
+            alignItems: "center",
+          }}
+        >
+          <button
+            onClick={handleAnimatedPrev}
+            style={{
+              fontFamily: "Inter, sans-serif",
+              fontSize: 9,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "#a09070",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            ← Previous
+          </button>
+          <button
+            onClick={() => bookRef.current?.pageFlip()?.flipNext("top")}
+            style={{
+              fontFamily: "Inter, sans-serif",
+              fontSize: 9,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "#a09070",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            Next →
+          </button>
+        </div>
       </div>
-      <div className="flex gap-6 mt-6">
-  <button
-    onClick={handleAnimatedPrev}
-    className="px-5 py-2 rounded-lg bg-stone-800 text-stone-300 hover:bg-stone-700 transition-colors text-sm"
-  >
-    ← Previous
-  </button>
-  <button
-    onClick={() => bookRef.current?.pageFlip()?.flipNext("top")}
-    className="px-5 py-2 rounded-lg bg-stone-800 text-stone-300 hover:bg-stone-700 transition-colors text-sm"
-  >
-    Next →
-  </button>
-</div>
     </div>
   );
 }

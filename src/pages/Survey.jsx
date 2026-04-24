@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import './journal.css'
 
 const questions = [
   {
@@ -33,26 +34,10 @@ const questions = [
 ]
 
 const journalInfo = {
-  today_tomorrow: {
-    name: "Today & Tomorrow",
-    description: "Review your day and plan ahead. Best for accountability and daily productivity.",
-    color: "bg-amber-700"
-  },
-  self_eval: {
-    name: "Self-Evaluation",
-    description: "Reflect on your habits and patterns. Best for personal growth and self-awareness.",
-    color: "bg-teal-700"
-  },
-  goal: {
-    name: "Goal Journal",
-    description: "Track goals and milestones. Best for when you have something specific to achieve.",
-    color: "bg-purple-700"
-  },
-  stream: {
-    name: "Stream of Consciousness",
-    description: "Free write with no structure. Best for stress relief and creative thinking.",
-    color: "bg-rose-700"
-  }
+  today_tomorrow: { name: "Today & Tomorrow", description: "Review your day and plan ahead. Best for accountability and daily productivity." },
+  self_eval: { name: "Self-Evaluation", description: "Reflect on your habits and patterns. Best for personal growth and self-awareness." },
+  goal: { name: "Goal Journal", description: "Track goals and milestones. Best for when you have something specific to achieve." },
+  stream: { name: "Stream of Consciousness", description: "Free write with no structure. Best for stress relief and creative thinking." },
 }
 
 function getRecommendation(answers) {
@@ -81,83 +66,77 @@ export default function Survey() {
     }
   }
 
- async function handleConfirm() {
-  const { data: { user } } = await supabase.auth.getUser()
-
-  for (const type of Object.keys(journalInfo)) {
-    const { error } = await supabase.from('user_journals').upsert({
-      user_id: user.id,
-      journal_type: type
-    }, { onConflict: 'user_id,journal_type' })
-
-    if (error) {
-      console.error('upsert error:', error)
-      return
+  async function handleConfirm() {
+    const { data: { user } } = await supabase.auth.getUser()
+    for (const type of Object.keys(journalInfo)) {
+      const { error } = await supabase.from('user_journals').upsert({
+        user_id: user.id, journal_type: type
+      }, { onConflict: 'user_id,journal_type' })
+      if (error) { console.error('upsert error:', error); return }
     }
-  }
-
-  navigate('/app/writing', { state: { recommended: selected } })
-}
-
-  if (recommendation) {
-    return (
-      <div className="min-h-screen bg-stone-950 flex items-center justify-center p-6">
-        <div className="w-full max-w-lg">
-          <h2 className="text-2xl font-semibold text-stone-100 text-center mb-2">Your recommendation</h2>
-          <p className="text-stone-400 text-center mb-8">Based on your answers — but you can pick any you like.</p>
-
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            {Object.entries(journalInfo).map(([type, info]) => (
-              <button
-                key={type}
-                onClick={() => setSelected(type)}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
-                  selected === type
-                    ? 'border-amber-500 bg-stone-800'
-                    : 'border-stone-700 bg-stone-900 hover:border-stone-500'
-                }`}
-              >
-                {recommendation === type && (
-                  <span className="text-xs text-amber-400 font-medium mb-1 block">Recommended</span>
-                )}
-                <p className="text-stone-100 font-medium text-sm">{info.name}</p>
-                <p className="text-stone-400 text-xs mt-1">{info.description}</p>
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={handleConfirm}
-            className="w-full py-3 rounded-xl bg-amber-700 hover:bg-amber-600 text-white font-medium transition-colors"
-          >
-            Let's go →
-          </button>
-        </div>
-      </div>
-    )
+    navigate('/app/writing', { state: { recommended: selected } })
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 flex items-center justify-center p-6">
-      <div className="w-full max-w-lg">
-        <div className="flex gap-2 mb-8">
-          {questions.map((_, i) => (
-            <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? 'bg-amber-500' : 'bg-stone-700'}`} />
-          ))}
-        </div>
+    <div className="journal-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <div className="survey-backdrop">
+        <div className="survey-card">
 
-        <h2 className="text-xl font-semibold text-stone-100 mb-6">{questions[step].question}</h2>
+          {recommendation ? (
+            <>
+              <div style={{ position: 'relative', zIndex: 1, marginBottom: 8 }}>
+                <p style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, color: '#1a1208', marginBottom: 4 }}>
+                  Your recommendation
+                </p>
+                <p style={{ fontFamily: 'Inter', fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#a09070' }}>
+                  Based on your answers — pick any you like
+                </p>
+              </div>
 
-        <div className="flex flex-col gap-3">
-          {questions[step].answers.map((answer, i) => (
-            <button
-              key={i}
-              onClick={() => handleAnswer(answer.type)}
-              className="p-4 rounded-xl bg-stone-900 border border-stone-700 text-stone-200 text-left hover:border-amber-500 hover:bg-stone-800 transition-all"
-            >
-              {answer.text}
-            </button>
-          ))}
+              <div className="survey-rec-grid">
+                {Object.entries(journalInfo).map(([type, info]) => (
+                  <button
+                    key={type}
+                    className={`survey-rec-item ${selected === type ? 'selected' : ''}`}
+                    onClick={() => setSelected(type)}
+                  >
+                    {recommendation === type && (
+                      <span className="survey-rec-recommended">✦ Recommended</span>
+                    )}
+                    <span className="survey-rec-name">{info.name}</span>
+                    <span className="survey-rec-desc">{info.description}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button className="survey-confirm-btn" onClick={handleConfirm}>
+                Begin journaling →
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="survey-progress">
+                {questions.map((_, i) => (
+                  <div key={i} className={`survey-progress-bar ${i <= step ? 'filled' : ''}`} />
+                ))}
+              </div>
+
+              <p className="survey-question">{questions[step].question}</p>
+
+              <div className="survey-answers">
+                {questions[step].answers.map((answer, i) => (
+                  <button
+                    key={i}
+                    className="survey-answer-btn"
+                    onClick={() => handleAnswer(answer.type)}
+                  >
+                    <span className="survey-answer-arrow">→</span>
+                    {answer.text}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
