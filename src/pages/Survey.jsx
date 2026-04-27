@@ -78,14 +78,14 @@ export default function Survey() {
   }
 
   return (
-    <div className="journal-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+    <div className="journal-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div className="survey-backdrop">
-        <div className="survey-card">
+        <div className="survey-card" style={{ maxWidth: 640 }}>
 
           {recommendation ? (
             <>
-              <div style={{ position: 'relative', zIndex: 1, marginBottom: 8 }}>
-                <p style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, color: '#1a1208', marginBottom: 4 }}>
+              <div style={{ position: 'relative', zIndex: 1, height: 64, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <p style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, color: '#1a1208', lineHeight: '32px' }}>
                   Your recommendation
                 </p>
                 <p style={{ fontFamily: 'Inter', fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#a09070' }}>
@@ -121,7 +121,9 @@ export default function Survey() {
                 ))}
               </div>
 
-              <p className="survey-question">{questions[step].question}</p>
+              <p className="survey-question" style={{ fontSize: 24, lineHeight: '1.35', paddingBottom: 16 }}>
+                {questions[step].question}
+              </p>
 
               <div className="survey-answers">
                 {questions[step].answers.map((answer, i) => (
@@ -129,12 +131,20 @@ export default function Survey() {
                     key={i}
                     className="survey-answer-btn"
                     onClick={() => handleAnswer(answer.type)}
+                    style={{
+                      height: 48,
+                      fontSize: 18,
+                      borderTop: i === 0 ? '0.5px solid rgba(160,140,100,0.25)' : 'none',
+                      borderBottom: '0.5px solid rgba(160,140,100,0.25)',
+                    }}
                   >
                     <span className="survey-answer-arrow">→</span>
                     {answer.text}
                   </button>
                 ))}
               </div>
+              {/* bottom padding */}
+              <div style={{ height: 16, position: 'relative', zIndex: 1 }} />
             </>
           )}
         </div>
