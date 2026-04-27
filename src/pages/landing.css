@@ -37,7 +37,7 @@
   letter-spacing: 0.25em; text-transform: uppercase;
 }
 .landing-hint {
-  position: absolute; bottom: 9%; left: 50%; transform: translateX(-50%);
+  position: absolute; top: 75%; left: 50%; transform: translateX(-50%);
   font-size: 11px; color: rgba(220,210,190,0.35);
   letter-spacing: 0.2em; text-transform: uppercase;
   pointer-events: none; transition: opacity 0.4s;
