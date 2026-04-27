@@ -76,10 +76,8 @@ export default function WritingPanel() {
     <div className="journal-page">
       <div className="journal-content">
 
-        {/* spacer */}
         <div style={{ height: 32, flexShrink: 0 }} />
 
-        {/* Header */}
         <div className="journal-page-header">
           <h1 className="journal-page-title">Writing Panel</h1>
           <span className="journal-page-date">
@@ -87,30 +85,24 @@ export default function WritingPanel() {
           </span>
         </div>
 
-        {/* spacer before tabs */}
         <div style={{ height: 32, flexShrink: 0 }} />
 
-        {/* Journal selector — styled as pill tabs so they stand out */}
+        {/* Journal selector */}
         <div style={{ display: 'flex', gap: 8, height: 32, alignItems: 'center', flexShrink: 0 }}>
           {journalOptions.map(j => (
             <button
               key={j.type}
               onClick={() => handleTypeChange(j.type)}
               style={{
-                padding: '0 14px',
-                height: 24,
-                fontFamily: 'Inter, sans-serif',
-                fontSize: 9,
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
+                padding: '0 14px', height: 24,
+                fontFamily: 'Inter, sans-serif', fontSize: 9,
+                letterSpacing: '0.15em', textTransform: 'uppercase',
                 fontWeight: selectedType === j.type ? 600 : 400,
                 color: selectedType === j.type ? '#f5f0e4' : '#7a6a48',
                 background: selectedType === j.type ? '#3a3020' : 'transparent',
                 border: selectedType === j.type ? 'none' : '0.5px solid rgba(160,140,100,0.4)',
-                borderRadius: 2,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                whiteSpace: 'nowrap',
+                borderRadius: 2, cursor: 'pointer',
+                transition: 'all 0.2s', whiteSpace: 'nowrap',
               }}
             >
               {j.name}
@@ -118,7 +110,6 @@ export default function WritingPanel() {
           ))}
         </div>
 
-        {/* gap between tabs and first prompt */}
         <div style={{ height: 32, flexShrink: 0 }} />
 
         {/* Writing area */}
@@ -149,47 +140,24 @@ export default function WritingPanel() {
           )}
         </div>
 
-        {/* Save row — more visible */}
+        {/* Save row */}
         <div style={{
-          height: 32,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexShrink: 0,
+          height: 32, display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', flexShrink: 0,
           borderTop: '0.5px solid rgba(160,140,100,0.3)',
-          marginTop: 0,
         }}>
           <button
-            style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: 9,
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              color: '#7a6a48',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-              transition: 'color 0.2s',
-            }}
+            style={{ fontFamily: 'Inter, sans-serif', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#7a6a48', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             onClick={() => navigate('/app/journals')}
           >
             View my journals →
           </button>
           <button
             style={{
-              fontFamily: 'Inter, sans-serif',
-              fontSize: 9,
-              letterSpacing: '0.2em',
-              textTransform: 'uppercase',
-              color: saved ? '#5a7a50' : '#1a1208',
-              background: 'none',
-              border: 'none',
+              fontFamily: 'Inter, sans-serif', fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: saved ? '#5a7a50' : '#1a1208', background: 'none', border: 'none',
               borderBottom: `0.5px solid ${saved ? '#5a7a50' : '#1a1208'}`,
-              cursor: 'pointer',
-              padding: '0 0 2px',
-              transition: 'color 0.2s',
-              fontWeight: 500,
+              cursor: 'pointer', padding: '0 0 2px', fontWeight: 500,
               opacity: (saving || Object.keys(currentEntry).length === 0) ? 0.4 : 1,
             }}
             onClick={handleSave}
